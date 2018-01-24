@@ -1,4 +1,4 @@
-(ns the-queen.core)
+(ns com.github.meandor.core)
 
 (defn foo
   "I don't do a whole lot."
