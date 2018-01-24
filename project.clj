@@ -6,7 +6,10 @@
   :scm {:name "git"
         :url  "https://github.com/meandor/the-queen"}
 
-  :dependencies [[org.clojure/clojure "1.9.0"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [com.taoensso/carmine "2.17.0"]
+                 [de.otto/tesla-microservice "0.11.22"]]
 
   :lein-release {:deploy-via :clojars}
-  :profiles {:dev {:plugins [[lein-release/lein-release "1.0.9"]]}})
+  :profiles {:dev {:plugins      [[lein-release/lein-release "1.0.9"]]
+                   :dependencies [[com.github.kstyrc/embedded-redis "0.6"]]}})
