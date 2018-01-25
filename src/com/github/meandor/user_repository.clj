@@ -1,6 +1,7 @@
 (ns com.github.meandor.user-repository
   (:require [com.github.meandor.redis-component :as rc]
             [taoensso.carmine :as car]
+            [clojure.walk :as w]
             [clojure.string :as str]))
 
 (defn new-user-id [redis-component]
@@ -19,3 +20,11 @@
               (car/incr "user-id"))
     user-id))
 
+(defn redis-user-vector->user-map [vector]
+  (if (= [] vector)
+    nil
+    (-> (w/keywordize-keys (apply hash-map vector))
+        (update :groups (fn [old] (str/split old #":"))))))
+
+(defn find-user [redis-component user-id]
+  (redis-user-vector->user-map (rc/wcar* redis-component (car/hgetall user-id))))

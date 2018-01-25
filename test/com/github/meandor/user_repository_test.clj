@@ -75,5 +75,29 @@
       (is (= ["user:1"]
              (rc/wcar* redis-component (car/smembers "groups:bak"))))
 
-      (is (= ["user:2" "user:1"]
-             (rc/wcar* redis-component (car/smembers "groups:42")))))))
+      (is (= (set ["user:1" "user:2"])
+             (set (rc/wcar* redis-component (car/smembers "groups:42"))))))))
+
+(deftest redis-vector->user-map
+  (testing "transformation of vector into map with keywordizing"
+    (is (= {:a "foo" :bar "baz" :groups ["a" "b"]}
+           (ur/redis-user-vector->user-map ["a" "foo" "bar" "baz" "groups" "a:b"])))
+    (is (= {:a "foo" :bar "baz" :groups ["a"]}
+           (ur/redis-user-vector->user-map ["a" "foo" "bar" "baz" "groups" "a"])))))
+
+(deftest find-user-by-id-test
+  (testing "return nil while looking for a non existent user"
+    (is (= nil
+           (ur/find-user redis-component "foobar"))))
+
+  (testing "find an existent user"
+    (rc/wcar* redis-component (car/hmset "user:1" "email" "foo@bar2.com" "name" "foobar2"
+                                         "firstname" "foo" "lastname" "bar2"
+                                         "password" "baz2" "groups" "42"))
+    (is (= {:email     "foo@bar2.com"
+            :name      "foobar2"
+            :firstname "foo"
+            :lastname  "bar2"
+            :password  "baz2"
+            :groups    ["42"]}
+           (ur/find-user redis-component "user:1")))))
