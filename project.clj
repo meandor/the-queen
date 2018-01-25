@@ -8,8 +8,11 @@
 
   :dependencies [[org.clojure/clojure "1.9.0"]
                  [com.taoensso/carmine "2.17.0"]
-                 [de.otto/tesla-microservice "0.11.22"]]
+                 [ch.qos.logback/logback-classic "1.2.3"]
+                 [de.otto/tesla-microservice "0.11.22"]
+                 [de.otto/tesla-httpkit "1.0.1"]]
 
   :lein-release {:deploy-via :clojars}
   :profiles {:dev {:plugins      [[lein-release/lein-release "1.0.9"]]
-                   :dependencies [[com.github.kstyrc/embedded-redis "0.6"]]}})
+                   :dependencies [[com.github.kstyrc/embedded-redis "0.6"]
+                                  [ring/ring-mock "0.3.2"]]}})

@@ -1,0 +1,25 @@
+<configuration>
+    <contextName>the-queen</contextName>
+
+    <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%gray(%date{HH:mm:ss.SSS}) [%thread] %highlight(%-5level) %cyan(%logger{15}) %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="fileAppender" class="ch.qos.logback.core.FileAppender">
+        <file>target/test.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>%date{HH:mm:ss.SSS} [%thread] %-5level %logger{15} - %m%n</pattern>
+        </encoder>
+
+    </appender>
+
+    <logger name="the-queen" level="info"/>
+
+    <root level="${log_level:-info}">
+        <appender-ref ref="${log_appender:-consoleAppender}"/>
+    </root>
+
+</configuration>
