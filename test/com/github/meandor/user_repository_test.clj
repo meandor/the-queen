@@ -5,15 +5,15 @@
             [taoensso.carmine :as car])
   (:import (redis.embedded RedisServer)))
 
-(defn with-db-fixture [f]
+(def redis-component {:connection {:pool {} :spec {}}})
+
+(defn- with-db-fixture [f]
   (let [db (RedisServer.)]
     (.start db)
     (f)
     (.stop db)))
 
-(def redis-component {:connection {:pool {} :spec {}}})
-
-(defn with-cleared-db [f]
+(defn- with-cleared-db [f]
   (rc/wcar* redis-component (car/flushall))
   (f))
 
