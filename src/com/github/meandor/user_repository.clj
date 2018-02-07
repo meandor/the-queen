@@ -27,4 +27,29 @@
         (update :groups (fn [old] (str/split old #":"))))))
 
 (defn find-user [redis-component user-id]
-  (redis-user-vector->user-map (rc/wcar* redis-component (car/hgetall user-id))))
+  (redis-user-vector->user-map (rc/wcar* redis-component (car/hgetall (str "user:" user-id)))))
+
+(defn all-user-ids [redis-component]
+  (map #(str/replace % "user:" "") (rc/wcar* redis-component (car/keys "user:*"))))
+
+(defn- delete-key [redis-component key]
+  (rc/wcar* redis-component (car/del key)))
+
+(defn find-user-groups [redis-component user-id]
+  (->> (str/split (rc/wcar* redis-component (car/hget (str "user:" user-id) "groups")) #":")
+       (map #(str "groups:" %))))
+
+(defn delete-user [redis-component user-id]
+  (let [group-ids (find-user-groups redis-component user-id)]
+    (rc/wcar* redis-component (doseq [group-id group-ids]
+                                (car/srem group-id (str "user:" user-id)))))
+  (delete-key redis-component (str "user:" user-id)))
+
+(defn find-group-member [redis-component group-id]
+  (map #(str/replace % "user:" "") (rc/wcar* redis-component (car/smembers (str "groups:" group-id)))))
+
+(defn all-group-ids [redis-component]
+  (rc/wcar* redis-component (car/keys "groups:*")))
+
+(defn delete-group [redis-component group-id]
+  (delete-key redis-component group-id))
