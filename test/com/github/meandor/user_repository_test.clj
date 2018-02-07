@@ -168,3 +168,30 @@
 
     (is (= (set ["1" "42"])
            (set (ur/all-group-ids redis-component))))))
+
+(deftest find-group-members-test
+  (testing "find all group members"
+    (ur/register-user redis-component {:email     "foo@bar.com"
+                                       :name      "foobar"
+                                       :firstname "foo"
+                                       :lastname  "bar"
+                                       :password  "baz"
+                                       :groups    ["42"]})
+    (ur/register-user redis-component {:email     "foo@bar2.com"
+                                       :name      "foobar2"
+                                       :firstname "foo"
+                                       :lastname  "bar2"
+                                       :password  "baz2"
+                                       :groups    ["42"]})
+    (is (= (set ["1" "2"])
+           (set (ur/find-group-member redis-component "42"))))
+
+    (ur/register-user redis-component {:email     "foo@baz.com"
+                                       :name      "foobaz"
+                                       :firstname "foo"
+                                       :lastname  "baz"
+                                       :password  "bazz"
+                                       :groups    ["42"]})
+
+    (is (= (set ["1" "2" "3"])
+           (set (ur/find-group-member redis-component "42"))))))
