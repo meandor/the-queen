@@ -49,7 +49,8 @@
   (map #(str/replace % "user:" "") (rc/wcar* redis-component (car/smembers (str "groups:" group-id)))))
 
 (defn all-group-ids [redis-component]
-  (rc/wcar* redis-component (car/keys "groups:*")))
+  (->> (rc/wcar* redis-component (car/keys "groups:*"))
+       (map #(str/replace % "groups:" ""))))
 
 (defn delete-group [redis-component group-id]
-  (delete-key redis-component group-id))
+  (delete-key redis-component (str "groups:" group-id)))

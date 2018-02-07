@@ -166,5 +166,5 @@
               (car/sadd "groups:1" "foobar" "42")
               (car/sadd "groups:42" "bar" "foo"))
 
-    (is (= (set ["groups:1" "groups:42"])
+    (is (= (set ["1" "42"])
            (set (ur/all-group-ids redis-component))))))
