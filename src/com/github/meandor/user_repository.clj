@@ -18,7 +18,7 @@
               (doseq [group groups]
                 (car/sadd group user-id))
               (car/incr "user-id"))
-    user-id))
+    (str/replace user-id "user:" "")))
 
 (defn redis-user-vector->user-map [vector]
   (if (= [] vector)
@@ -54,3 +54,17 @@
 
 (defn delete-group [redis-component group-id]
   (delete-key redis-component (str "groups:" group-id)))
+
+(defn update-user [redis-component user-id user]
+  (let [groups (map #(str "groups:" %) (:groups user))
+        internal-user-id (str "user:" user-id)
+        old-groups (find-user-groups redis-component user-id)]
+    (rc/wcar* redis-component
+              (doseq [[k v] (update user :groups (fn [old] (str/join ":" old)))]
+                (car/hset internal-user-id k v))
+              (doseq [group groups]
+                (car/sadd group internal-user-id))
+              (doseq [group old-groups]
+                (car/srem group internal-user-id))
+              (car/incr "user-id"))
+    user-id))

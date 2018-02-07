@@ -195,3 +195,35 @@
 
     (is (= (set ["1" "2" "3"])
            (set (ur/find-group-member redis-component "42"))))))
+
+(deftest update-user-test
+  (testing "update existing users values"
+    (ur/register-user redis-component {:email     "foo@bar.com"
+                                       :name      "foobar"
+                                       :firstname "foo"
+                                       :lastname  "bar"
+                                       :password  "baz"
+                                       :groups    ["42"]})
+    (is (= "1"
+           (ur/update-user redis-component "1" {:email     "foo@bar2.com"
+                                                :name      "foobar2"
+                                                :firstname "foo2"
+                                                :lastname  "bar2"
+                                                :password  "baz2"
+                                                :groups    ["1337" "1"]})))
+    (is (= ["email" "foo@bar2.com"
+            "name" "foobar2"
+            "firstname" "foo2"
+            "lastname" "bar2"
+            "password" "baz2"
+            "groups" "1337:1"]
+           (rc/wcar* redis-component (car/hgetall "user:1"))))
+
+    (is (= ["user:1"]
+           (rc/wcar* redis-component (car/smembers "groups:1337"))))
+
+    (is (= ["user:1"]
+           (rc/wcar* redis-component (car/smembers "groups:1"))))
+
+    (is (= []
+           (rc/wcar* redis-component (car/smembers "groups:42"))))))
