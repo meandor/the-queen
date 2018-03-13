@@ -4,46 +4,75 @@
             [clojure.walk :as w]
             [clojure.string :as str]))
 
-(defn new-user-id [redis-component]
-  (if-let [user-id (rc/wcar* redis-component (car/get "user-id"))]
-    (str "user:" (inc (read-string user-id)))
-    "user:1"))
+(defn user-id->user-key [user-id]
+  (str "user:" user-id))
+
+(defn user-key->user-id [user-key]
+  (str/replace user-key "user:" ""))
+
+(defn group-id->group-key [group-id]
+  (str "groups:" group-id))
+
+(defn group-key->group-id [group-key]
+  (str/replace group-key "groups:" ""))
+
+(def CURRENT_FREE_USER_ID_KEY "user-id")
+
+(defn new-user-key [redis-component]
+  (if-let [user-id (rc/wcar* redis-component (car/get CURRENT_FREE_USER_ID_KEY))]
+    (user-id->user-key (inc (read-string user-id)))
+    (user-id->user-key 1)))
+
+(def LIST_SEPARATOR "/")
+
+(defn combined-group-keys [group-ids]
+  (->> group-ids
+       (map group-id->group-key)
+       (str/join LIST_SEPARATOR)))
+
+(defn- add-user-to-db [redis-component user-key user]
+  (rc/wcar* redis-component
+            (doseq [[k v] (update user :groups combined-group-keys)]
+              (car/hset user-key k v))
+            (doseq [group-key (map group-id->group-key (:groups user))]
+              (car/sadd group-key user-key))))
 
 (defn register-user [redis-component user]
-  (let [user-id (new-user-id redis-component)
-        groups (map #(str "groups:" %) (:groups user))]
-    (rc/wcar* redis-component
-              (doseq [[k v] (update user :groups (fn [old] (str/join ":" old)))]
-                (car/hset user-id k v))
-              (doseq [group groups]
-                (car/sadd group user-id))
-              (car/incr "user-id"))
-    (str/replace user-id "user:" "")))
+  (let [user-key (new-user-key redis-component)]
+    (add-user-to-db redis-component user-key user)
+    (rc/wcar* redis-component (car/incr CURRENT_FREE_USER_ID_KEY))
+    (user-key->user-id user-key)))
 
 (defn redis-user-vector->user-map [vector]
-  (if (= [] vector)
-    nil
+  (when (not (empty? vector))
     (-> (w/keywordize-keys (apply hash-map vector))
-        (update :groups (fn [old] (str/split old #":"))))))
+        (update :groups (fn [old] (str/split old #"/"))))))
 
 (defn find-user [redis-component user-id]
-  (redis-user-vector->user-map (rc/wcar* redis-component (car/hgetall (str "user:" user-id)))))
+  (redis-user-vector->user-map (rc/wcar* redis-component (car/hgetall (user-id->user-key user-id)))))
 
-(defn all-user-ids [redis-component]
-  (map #(str/replace % "user:" "") (rc/wcar* redis-component (car/keys "user:*"))))
+(defn- user-groups-with-keys [redis-component user-key]
+  (-> redis-component
+      (rc/wcar* (car/hget user-key "groups"))
+      (str/split #"/")))
+
+(defn find-user-groups [redis-component user-id]
+  (->> (user-groups-with-keys redis-component (user-id->user-key user-id))
+       (map group-key->group-id)))
 
 (defn- delete-key [redis-component key]
   (rc/wcar* redis-component (car/del key)))
 
-(defn find-user-groups [redis-component user-id]
-  (->> (str/split (rc/wcar* redis-component (car/hget (str "user:" user-id) "groups")) #":")
-       (map #(str "groups:" %))))
-
 (defn delete-user [redis-component user-id]
-  (let [group-ids (find-user-groups redis-component user-id)]
-    (rc/wcar* redis-component (doseq [group-id group-ids]
-                                (car/srem group-id (str "user:" user-id)))))
-  (delete-key redis-component (str "user:" user-id)))
+  (let [user-key (user-id->user-key user-id)]
+    (rc/wcar* redis-component (doseq [group-key (user-groups-with-keys redis-component user-key)]
+                                (car/srem group-key user-key)))
+    (delete-key redis-component user-key)))
+
+(defn update-user [redis-component user-id user]
+  (delete-user redis-component user-id)
+  (add-user-to-db redis-component (user-id->user-key user-id) user)
+  user-id)
 
 (defn find-group-member [redis-component group-id]
   (map #(str/replace % "user:" "") (rc/wcar* redis-component (car/smembers (str "groups:" group-id)))))
@@ -54,17 +83,3 @@
 
 (defn delete-group [redis-component group-id]
   (delete-key redis-component (str "groups:" group-id)))
-
-(defn update-user [redis-component user-id user]
-  (let [groups (map #(str "groups:" %) (:groups user))
-        internal-user-id (str "user:" user-id)
-        old-groups (find-user-groups redis-component user-id)]
-    (rc/wcar* redis-component
-              (doseq [[k v] (update user :groups (fn [old] (str/join ":" old)))]
-                (car/hset internal-user-id k v))
-              (doseq [group groups]
-                (car/sadd group internal-user-id))
-              (doseq [group old-groups]
-                (car/srem group internal-user-id))
-              (car/incr "user-id"))
-    user-id))
