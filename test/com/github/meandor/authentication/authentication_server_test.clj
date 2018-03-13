@@ -9,3 +9,21 @@
 
     (is (= "688787d8ff144c502c7f5cffaafe2cc588d86079f9de88304c26b0cb99ce91c6"
            (as/sha-256 "asd")))))
+
+(deftest ticket-granting-ticket-test
+  (testing "Should create a ticket granting ticket"
+    (with-redefs [as/session-key (constantly "foobaz")
+                  as/current-time (constantly 1337)]
+      (is (= {:client-principal  "foobar"
+              :service-principal "fooTGS"
+              :datetime          1337
+              :lifetime          42
+              :session-key       "foobaz"}
+             (as/ticket-granting-ticket "foobar" "fooTGS" 42)))
+
+      (is (= {:client-principal  "foobar2"
+              :service-principal "fooTGS2"
+              :datetime          1337
+              :lifetime          12
+              :session-key       "foobaz"}
+             (as/ticket-granting-ticket "foobar2" "fooTGS2" 12))))))
