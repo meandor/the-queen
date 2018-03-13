@@ -1,2 +1,4 @@
-{:server-port #ts/env [:port "8080"]
- :metrics     {:prometheus {:metrics-path "/metrics"}}}
+{:server-port    #ts/env [:port "8080"]
+ :metrics        {:prometheus {:metrics-path "/metrics"}}
+ :authentication {:username #ts/env [:username "admin"]
+                  :password #ts/env [:password "password"]}}
