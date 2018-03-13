@@ -68,10 +68,10 @@
 
 (deftest redis-vector->user-map
   (testing "transformation of vector into map with keywordizing"
-    (is (= {:a "foo" :bar "baz" :groups ["a:b" "c:d"]}
-           (ur/redis-user-vector->user-map ["a" "foo" "bar" "baz" "groups" "a:b/c:d"])))
-    (is (= {:a "foo" :bar "baz" :groups ["a:b"]}
-           (ur/redis-user-vector->user-map ["a" "foo" "bar" "baz" "groups" "a:b"])))))
+    (is (= {:a "foo" :bar "baz" :groups ["b" "d"]}
+           (ur/redis-user-vector->user-map ["a" "foo" "bar" "baz" "groups" "groups:b/groups:d"])))
+    (is (= {:a "foo" :bar "baz" :groups ["b"]}
+           (ur/redis-user-vector->user-map ["a" "foo" "bar" "baz" "groups" "groups:b"])))))
 
 (deftest find-user-by-id-test
   (testing "return nil while looking for a non existent user"

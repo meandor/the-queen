@@ -25,7 +25,7 @@
 
 (def LIST_SEPARATOR "/")
 
-(defn combined-group-keys [group-ids]
+(defn- combined-group-keys [group-ids]
   (->> group-ids
        (map group-id->group-key)
        (str/join LIST_SEPARATOR)))
@@ -43,10 +43,14 @@
     (rc/wcar* redis-component (car/incr CURRENT_FREE_USER_ID_KEY))
     (user-key->user-id user-key)))
 
+(defn- split-combined-groups [combined-groups]
+  (->> (str/split combined-groups (re-pattern LIST_SEPARATOR))
+       (map group-key->group-id)))
+
 (defn redis-user-vector->user-map [vector]
   (when (not (empty? vector))
     (-> (w/keywordize-keys (apply hash-map vector))
-        (update :groups (fn [old] (str/split old #"/"))))))
+        (update :groups split-combined-groups))))
 
 (defn find-user [redis-component user-id]
   (redis-user-vector->user-map (rc/wcar* redis-component (car/hgetall (user-id->user-key user-id)))))
@@ -54,7 +58,7 @@
 (defn- user-groups-with-keys [redis-component user-key]
   (-> redis-component
       (rc/wcar* (car/hget user-key "groups"))
-      (str/split #"/")))
+      (str/split (re-pattern LIST_SEPARATOR))))
 
 (defn find-user-groups [redis-component user-id]
   (->> (user-groups-with-keys redis-component (user-id->user-key user-id))
@@ -75,11 +79,11 @@
   user-id)
 
 (defn find-group-member [redis-component group-id]
-  (map #(str/replace % "user:" "") (rc/wcar* redis-component (car/smembers (str "groups:" group-id)))))
+  (map user-key->user-id (rc/wcar* redis-component (car/smembers (group-id->group-key group-id)))))
 
 (defn all-group-ids [redis-component]
   (->> (rc/wcar* redis-component (car/keys "groups:*"))
-       (map #(str/replace % "groups:" ""))))
+       (map group-key->group-id)))
 
 (defn delete-group [redis-component group-id]
-  (delete-key redis-component (str "groups:" group-id)))
+  (delete-key redis-component (group-id->group-key group-id)))
