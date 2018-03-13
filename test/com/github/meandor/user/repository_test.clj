@@ -1,6 +1,6 @@
-(ns com.github.meandor.user-repository-test
+(ns com.github.meandor.user.repository-test
   (:require [clojure.test :refer :all]
-            [com.github.meandor.user-repository :as ur]
+            [com.github.meandor.user.repository :as ur]
             [com.github.meandor.redis-component :as rc]
             [taoensso.carmine :as car])
   (:import (redis.embedded RedisServer)))

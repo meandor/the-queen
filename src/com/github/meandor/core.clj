@@ -1,11 +1,11 @@
 (ns com.github.meandor.core
-  (:gen-class)
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as c]
             [de.otto.goo.goo :as goo]
             [iapetos.collector.jvm :as jvm]
             [de.otto.tesla.serving-with-httpkit :as httpkit]
-            [de.otto.tesla.system :as system]))
+            [de.otto.tesla.system :as system])
+  (:gen-class))
 
 (defn the-queen-system [runtime-config]
   (-> (system/base-system runtime-config)

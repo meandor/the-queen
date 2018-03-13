@@ -1,4 +1,4 @@
-(ns com.github.meandor.user-repository
+(ns com.github.meandor.user.repository
   (:require [com.github.meandor.redis-component :as rc]
             [taoensso.carmine :as car]
             [clojure.walk :as w]
