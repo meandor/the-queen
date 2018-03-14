@@ -1,7 +1,7 @@
 (ns com.github.meandor.authentication.crypto-utils
   (:import (java.nio.charset StandardCharsets)
            (java.security MessageDigest SecureRandom)
-           (javax.crypto SecretKeyFactory)
+           (javax.crypto SecretKeyFactory Cipher)
            (javax.crypto.spec PBEKeySpec SecretKeySpec)))
 
 (defn byte-array->unsigned-hex-string [bytes-values]
@@ -12,15 +12,15 @@
   (-> (MessageDigest/getInstance "SHA-256")
       (.digest (.getBytes plaintext StandardCharsets/UTF_8))))
 
-(defn salt [length]
-  (let [salt-byte-array (byte-array length)]                ;TODO: (doto)
-    (.nextBytes (new SecureRandom) salt-byte-array)
-    salt-byte-array))
+(defn random-bytes [length]
+  (let [random-byte-array (byte-array length)]
+    (.nextBytes (new SecureRandom) random-byte-array)
+    random-byte-array))
 
 (def PBKDF2_ITERATIONS 15789)
 (defn aes-secret-key [plain size]
-  (let [random-salt (salt (/ size 8))                       ;salt should be >= hash length in bytes
-        spec (new PBEKeySpec (char-array plain) random-salt PBKDF2_ITERATIONS size)]
+  (let [salt (random-bytes (/ size 8))                      ;salt should be >= hash length in bytes
+        spec (new PBEKeySpec (char-array plain) salt PBKDF2_ITERATIONS size)]
     (-> (SecretKeyFactory/getInstance "PBKDF2WithHmacSHA256")
         (.generateSecret spec)
         (.getEncoded)
