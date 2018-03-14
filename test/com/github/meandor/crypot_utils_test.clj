@@ -1,7 +1,6 @@
-(ns com.github.meandor.authentication.crypot-utils-test
+(ns com.github.meandor.crypot-utils-test
   (:require [clojure.test :refer :all]
-            [com.github.meandor.authentication.crypto-utils :as cu])
-  (:import (javax.crypto.spec IvParameterSpec)))
+            [com.github.meandor.crypto-utils :as cu]))
 
 (deftest sha-256-test
   (testing "Should calculate correct hash"

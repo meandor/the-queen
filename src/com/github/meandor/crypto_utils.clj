@@ -1,4 +1,4 @@
-(ns com.github.meandor.authentication.crypto-utils
+(ns com.github.meandor.crypto-utils
   (:import (java.nio.charset StandardCharsets)
            (java.security MessageDigest SecureRandom)
            (javax.crypto Cipher)
