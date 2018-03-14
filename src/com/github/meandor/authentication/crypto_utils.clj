@@ -1,8 +1,8 @@
 (ns com.github.meandor.authentication.crypto-utils
   (:import (java.nio.charset StandardCharsets)
            (java.security MessageDigest SecureRandom)
-           (javax.crypto SecretKeyFactory Cipher)
-           (javax.crypto.spec PBEKeySpec SecretKeySpec)))
+           (javax.crypto Cipher)
+           (javax.crypto.spec SecretKeySpec IvParameterSpec)))
 
 (defn byte-array->unsigned-hex-string [bytes-values]
   (->> (map #(format "%02x" (int (bit-and % 0xff))) bytes-values)
@@ -17,22 +17,17 @@
     (.nextBytes (new SecureRandom) random-byte-array)
     random-byte-array))
 
-(def PBKDF2_ITERATIONS 15789)
-(defn aes-secret-key [plain size]
-  (let [salt (random-bytes (/ size 8))                      ;salt should be >= hash length in bytes
-        spec (new PBEKeySpec (char-array plain) salt PBKDF2_ITERATIONS size)]
-    (-> (SecretKeyFactory/getInstance "PBKDF2WithHmacSHA256")
-        (.generateSecret spec)
-        (.getEncoded)
-        (SecretKeySpec. "AES"))))
+(defn iv [length]
+  (IvParameterSpec. (random-bytes length)))
 
-(defn aes-256 [secret-key plaintext]
-  ;byte[] key = null; // TODO
-  ;byte[] input = null; // TODO
-  ;byte[] output = null;
-  ;SecretKeySpec keySpec = null;
-  ;keySpec = new SecretKeySpec(key, "AES");
-  ;Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
-  ;cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-  ;output = cipher.doFinal(input)
-  )
+(defn encrypt-aes-256 [secret iv plaintext-bytes]
+  (let [^Cipher cipher (Cipher/getInstance "AES/CBC/PKCS5Padding")
+        hashed-secret-key (SecretKeySpec. (sha-256 secret) "AES")]
+    (.init cipher Cipher/ENCRYPT_MODE hashed-secret-key iv)
+    (.doFinal cipher plaintext-bytes)))
+
+(defn decrypt-aes-256 [secret iv encrypted-bytes]
+  (let [cipher (Cipher/getInstance "AES/CBC/PKCS5Padding")
+        hashed-secret-key (SecretKeySpec. (sha-256 secret) "AES")]
+    (.init cipher Cipher/DECRYPT_MODE hashed-secret-key iv)
+    (.doFinal cipher encrypted-bytes)))

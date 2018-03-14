@@ -1,6 +1,7 @@
 (ns com.github.meandor.authentication.crypot-utils-test
   (:require [clojure.test :refer :all]
-            [com.github.meandor.authentication.crypto-utils :as cu]))
+            [com.github.meandor.authentication.crypto-utils :as cu])
+  (:import (javax.crypto.spec IvParameterSpec)))
 
 (deftest sha-256-test
   (testing "Should calculate correct hash"
@@ -16,16 +17,11 @@
     (is (not= (into [] (cu/random-bytes 16))
               (into [] (cu/random-bytes 16))))))
 
-(deftest aes-secret-key-test
-  (testing "Should generate a salted cipher secret key for aes with 128 bits"
-    (with-redefs [cu/random-bytes (fn [length]
-                                    (is (= 32 length))
-                                    (byte-array length))]
-      (is (= "b4b839071a9e2a9ca7730410c1d680ef3dceda331811ddf4e9a094c3e477c000"
-             (cu/byte-array->unsigned-hex-string (.getEncoded (cu/aes-secret-key "foobar" 256))))))))
-
-#_(deftest aes-encryption-keys-test
-    (testing "Should create encryption keys"
-      (is (= []
-             (cu/aes-encryption-keys 128 "foobar" (byte-array 16))))
-      ))
+(deftest aes-encryption-decryption-test
+  (testing "Should encrypt and decrypt something"
+    (let [iv (cu/iv 16)
+          cipher (cu/encrypt-aes-256 "secret" iv (.getBytes "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"))]
+      #_(is (= (/ 256 8)                                    ;TODO: size is double, is that correct?
+               (count cipher)))
+      (is (= "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern"
+             (apply str (map char (cu/decrypt-aes-256 "secret" iv cipher))))))))
