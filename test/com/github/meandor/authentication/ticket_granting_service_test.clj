@@ -1,6 +1,7 @@
 (ns com.github.meandor.authentication.ticket-granting-service-test
   (:require [clojure.test :refer :all]
-            [com.github.meandor.authentication.ticket-granting-service :as tgs]))
+            [com.github.meandor.authentication.ticket-granting-service :as tgs]
+            [com.github.meandor.crypto :as crypto]))
 
 (deftest ticket-granting-ticket-structure
   (testing "Should create a ticket granting ticket data structure"
@@ -30,3 +31,15 @@
             :nonce                  1337
             :ticket-granting-ticket "encrypted"}
            (tgs/ticket "session-key2" 1337 "encrypted")))))
+
+(deftest encrypt-ticket-structure
+  (testing "Should turn a ticket structure into a encrypted string"
+    (let [iv-example (crypto/iv 16)]
+      (with-redefs [crypto/encrypt-aes-256 (fn [secret iv plaintext-bytes]
+                                             (is (= "safe-password" secret))
+                                             (is (= iv-example iv))
+                                             (is (= [123 58 102 111 111 32 34 98 97 114 34 125]
+                                                    plaintext-bytes))
+                                             "foo")]
+        (is (= "foo"
+               (tgs/encrypt-ticket {:foo "bar"} "safe-password" iv-example)))))))

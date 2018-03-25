@@ -1,4 +1,5 @@
-(ns com.github.meandor.authentication.ticket-granting-service)
+(ns com.github.meandor.authentication.ticket-granting-service
+  (:require [com.github.meandor.crypto :as crypto]))
 
 (defn session-key []
   (* 100000000 (Math/random)))
@@ -20,3 +21,6 @@
   {:session-key            session-key
    :nonce                  nonce
    :ticket-granting-ticket ticket-granting-ticket})
+
+(defn encrypt-ticket [ticket secret iv]
+  (crypto/encrypt-aes-256 secret iv (map byte (str ticket))))
