@@ -5,11 +5,20 @@
 (defn current-time []
   (System/currentTimeMillis))
 
+(def IV_BYTE_SIZE 16)
+
 (defn encrypt-data-structure [data-structure-plain secret]
-  (let [iv (crypto/random-iv 16)
-        iv-bytes (.getIV iv)]
-    (byte-array (concat iv-bytes (crypto/encrypt-aes-256 secret iv (byte-array (map byte (str data-structure-plain))))))))
+  (let [iv (crypto/random-iv IV_BYTE_SIZE)]
+    (->> (str data-structure-plain)
+         (map byte)
+         (byte-array)
+         (crypto/encrypt-aes-256 secret iv)
+         (concat (.getIV iv))
+         (byte-array))))
 
 (defn decrypt-data-structure [data-structure-cipher secret]
-  (let [[iv cipher] (split-at 16 data-structure-cipher)]
-    (edn/read-string (new String (crypto/decrypt-aes-256 secret (crypto/iv (byte-array iv)) (byte-array cipher))))))
+  (let [[iv cipher] (split-at IV_BYTE_SIZE data-structure-cipher)]
+    (->> (byte-array cipher)
+         (crypto/decrypt-aes-256 secret (crypto/iv (byte-array iv)))
+         (new String)
+         (edn/read-string))))
