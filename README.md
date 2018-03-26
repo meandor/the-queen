@@ -1,6 +1,10 @@
 # The Queen
 [![Build Status](https://travis-ci.org/meandor/the-queen.svg?branch=master)](https://travis-ci.org/meandor/the-queen)
 
+> Known for her sense of duty and her devotion to a life of service, she has been an important figurehead [...]
+>
+> -- https://www.royal.uk/her-majesty-the-queen
+
 The Queen is a authentication and authorization authority. The Queen authorizes you and 
 will issue your passport for other services to grant you entree. It can therefore be used
 as a [SSO](https://en.wikipedia.org/wiki/Single_sign-on) service.
