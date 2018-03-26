@@ -1,6 +1,5 @@
 (ns com.github.meandor.authentication.ticket-granting-service
-  (:require [com.github.meandor.crypto :as crypto]
-            [com.github.meandor.authentication.utils :as utils]))
+  (:require [com.github.meandor.authentication.utils :as utils]))
 
 (defn session-key []
   (* 100000000 (Math/random)))

@@ -1,7 +1,6 @@
 (ns com.github.meandor.authentication.ticket-granting-service-test
   (:require [clojure.test :refer :all]
             [com.github.meandor.authentication.ticket-granting-service :as tgs]
-            [com.github.meandor.crypto :as crypto]
             [com.github.meandor.authentication.utils :as utils]))
 
 (deftest ticket-granting-ticket-structure
