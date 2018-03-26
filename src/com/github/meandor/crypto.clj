@@ -17,8 +17,11 @@
     (.nextBytes (new SecureRandom) random-byte-array)
     random-byte-array))
 
-(defn iv [length]
-  (IvParameterSpec. (random-bytes length)))
+(defn iv [bytes-iv]
+  (IvParameterSpec. bytes-iv))
+
+(defn random-iv [length]
+  (iv (random-bytes length)))
 
 (defn encrypt-aes-256 [secret iv plaintext-bytes]
   (let [^Cipher cipher (Cipher/getInstance "AES/CBC/PKCS5Padding")

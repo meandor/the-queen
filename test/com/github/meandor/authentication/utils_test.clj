@@ -5,7 +5,7 @@
 
 (deftest encrypt-datas-structure
   (testing "Should turn a ticket structure into a encrypted string"
-    (let [iv-example (crypto/iv 16)]
+    (let [iv-example (crypto/random-iv 16)]
       (with-redefs [crypto/encrypt-aes-256 (fn [secret iv plaintext-bytes]
                                              (is (= "safe-password" secret))
                                              (is (= iv-example iv))

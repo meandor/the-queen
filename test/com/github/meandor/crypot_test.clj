@@ -23,7 +23,7 @@
 
 (deftest aes-encryption-decryption-test
   (testing "Should encrypt and decrypt something"
-    (let [iv (crypto/iv 16)                                 ; aes-256 block length is 128 bits
+    (let [iv (crypto/random-iv 16)                                 ; aes-256 block length is 128 bits
           cipher (crypto/encrypt-aes-256 "secret" iv (.getBytes plaintext))]
       (is (= (* 16 (round (/ (count (.getBytes plaintext)) 16)))
              (count cipher)))
